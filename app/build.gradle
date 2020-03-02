@@ -1,0 +1,220 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'jacoco'
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        applicationId "com.br.caiodev.gistnator"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    buildTypes {
+
+        release {
+            minifyEnabled true
+            debuggable = false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            debuggable = true
+            testCoverageEnabled = true
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
+
+    sourceSets {
+        androidTest {
+            java.srcDirs += "src/sharedTest/java"
+        }
+        test {
+            java.srcDirs += "src/sharedTest/java"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    //AppCompat
+    implementation "androidx.appcompat:appcompat:$appCompat"
+
+    //AndroidXCore
+    implementation "androidx.core:core:$androidXCore"
+
+    //Coil
+    implementation "io.coil-kt:coil:$coil"
+
+    //Espresso
+    implementation "androidx.test.espresso:espresso-idling-resource:$espresso"
+
+    //Layouts
+    implementation "androidx.constraintlayout:constraintlayout:$constraintLayout"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swipeRefreshLayout"
+
+    //Koin
+    //For Android
+    implementation "org.koin:koin-android:$koin"
+    //For Lifecycle scoping
+    implementation "org.koin:koin-androidx-scope:$koin"
+    //For Android Architecture ViewModel
+    implementation "org.koin:koin-androidx-viewmodel:$koin"
+
+    //Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin"
+
+    //Ktx
+    implementation "androidx.core:core-ktx:$ktxCore"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$arch"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$arch"
+
+    //LeakCanary
+    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanary"
+
+    //Lifecycle section
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$arch"
+    implementation "androidx.lifecycle:lifecycle-extensions:$arch"
+    implementation "androidx.lifecycle:lifecycle-runtime:$arch"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$arch"
+
+    //Logging section
+    implementation "com.squareup.okhttp3:logging-interceptor:$okHttp"
+    implementation "com.jakewharton.timber:timber:$timber"
+
+    //Material design
+    implementation "com.google.android.material:material:$materialDesign"
+
+    //Retrofit
+    implementation "com.squareup.retrofit2:retrofit:$retrofit"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit"
+
+    /*Testing section*/
+
+    /*Test source set*/
+    //ArchTestCore
+    testImplementation "androidx.arch.core:core-testing:$archTest"
+
+    //CoroutinesTest
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutineTest"
+
+    //Jacoco
+    testImplementation "org.jacoco:org.jacoco.ant:$jacocoVersion"
+
+    //JUnit
+    testImplementation "org.junit.jupiter:junit-jupiter:$junit5"
+
+    //Mockito
+    testImplementation "org.mockito:mockito-core:$mockito"
+
+    //MockWebServer
+    testImplementation "com.squareup.okhttp3:mockwebserver:$okHttp"
+
+    //Test core
+    testImplementation "androidx.test:core-ktx:$testCore"
+
+    //Truth
+    testImplementation "com.google.truth:truth:$truth"
+
+    /*AndroidTest source set*/
+    //ArchTestCore
+    androidTestImplementation "androidx.arch.core:core-testing:$archTest"
+
+    //Espresso
+    androidTestImplementation "androidx.test.espresso:espresso-accessibility:$espresso"
+    androidTestImplementation "androidx.test.espresso:espresso-contrib:$espresso"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espresso"
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$espresso"
+
+    //JUnit
+    androidTestImplementation "androidx.test.ext:junit-ktx:$junitAndroidX"
+
+    //Mockito
+    androidTestImplementation "org.mockito:mockito-core:$mockito"
+    androidTestImplementation "com.linkedin.dexmaker:dexmaker-mockito:$dexMaker"
+
+    //MockWebServer
+    androidTestImplementation "com.squareup.okhttp3:mockwebserver:$okHttp"
+
+    //Runner
+    androidTestImplementation "androidx.test:runner:$runner"
+
+    //Test core
+    androidTestImplementation "androidx.test:core-ktx:$testCore"
+
+    //Truth
+    androidTestImplementation "com.google.truth:truth:$truth"
+}
+
+jacoco {
+    toolVersion = "$jacocoVersion"
+    reportsDir = file("$buildDir")
+}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest']) {
+
+    def coverageSourceDirs = [
+            "src/main/java"
+    ]
+
+    def fileFilter = [
+            '**/*Activity.*',
+            '**/*Adapter.*',
+            '**/BuildConfig.*',
+            '**/*Constants.*',
+            '**/Manifest*.*',
+            '**/R.class',
+            '**/R$*.class',
+            '**/*Test*.*',
+            '**/*ViewHolder*.*',
+            'android/**/*.*',
+            'androidx/**/*.*',
+            '**/*delay/**/*.*',
+            '**/*init/**/*.*',
+            '**/*model/**/*.*'
+    ]
+
+    def javaClasses = fileTree(dir: "$buildDir/intermediates/classes/debug", excludes: fileFilter)
+    def kotlinClasses = fileTree(dir: "$buildDir/tmp/kotlin-classes/debug", excludes: fileFilter)
+
+    classDirectories.setFrom files([javaClasses, kotlinClasses])
+    additionalSourceDirs.setFrom files(coverageSourceDirs)
+
+    sourceDirectories.setFrom files([
+            "$project.projectDir/src/main/java"
+    ])
+
+    executionData.setFrom fileTree(dir: project.projectDir, includes: ["**/*.exec"])
+
+    reports {
+        html.enabled true
+    }
+}
