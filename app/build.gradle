@@ -1,7 +1,8 @@
 apply plugin: 'com.android.application'
+apply plugin: 'jacoco'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'jacoco'
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdkVersion 29
@@ -12,6 +13,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -27,6 +29,11 @@ android {
             debuggable = true
             testCoverageEnabled = true
             signingConfig signingConfigs.debug
+        }
+
+        dexOptions {
+            // release & debug is in project animators
+            matchingFallbacks = ['release', 'debug']
         }
     }
 
@@ -48,9 +55,11 @@ android {
     }
 
     sourceSets {
+
         androidTest {
             java.srcDirs += "src/sharedTest/java"
         }
+
         test {
             java.srcDirs += "src/sharedTest/java"
         }
@@ -77,11 +86,8 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swipeRefreshLayout"
 
     //Koin
-    //For Android
     implementation "org.koin:koin-android:$koin"
-    //For Lifecycle scoping
     implementation "org.koin:koin-androidx-scope:$koin"
-    //For Android Architecture ViewModel
     implementation "org.koin:koin-androidx-viewmodel:$koin"
 
     //Kotlin
@@ -132,6 +138,11 @@ dependencies {
 
     //MockWebServer
     testImplementation "com.squareup.okhttp3:mockwebserver:$okHttp"
+
+    //Room
+    implementation "androidx.room:room-ktx:$room"
+    implementation "androidx.room:room-runtime:$room"
+    kapt "androidx.room:room-compiler:$room"
 
     //Test core
     testImplementation "androidx.test:core-ktx:$testCore"

@@ -1,6 +1,7 @@
 package br.com.caiodev.gistnator.sections.gistObtainment.view.viewHolders
 
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import br.com.caiodev.gistnator.R
 import br.com.caiodev.gistnator.sections.gistObtainment.model.viewTypes.Gist
@@ -21,14 +22,24 @@ class GistViewHolder(
         itemView.parentLayout.setOnClickListener {
             onItemClicked?.onItemClick(adapterPosition, gistCell)
         }
-
-        itemView.favoriteCheckBox.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked)
-                onItemClicked?.onItemClick(adapterPosition, favorite)
-        }
     }
 
     fun bind(model: Gist) {
+
+        changeFavoriteState(
+            model,
+            R.drawable.ic_favorite_border,
+            R.drawable.ic_saved_favorite,
+            {},
+            {})
+
+        itemView.favoriteImageView.setOnClickListener {
+            changeFavoriteState(model,
+                R.drawable.ic_saved_favorite,
+                R.drawable.ic_favorite_border,
+                { onItemClicked?.onItemClick(adapterPosition, favorite, false) },
+                { onItemClicked?.onItemClick(adapterPosition, favorite, true) })
+        }
 
         model.owner.login.let {
             itemView.userLogin.text = it
@@ -39,5 +50,32 @@ class GistViewHolder(
             R.mipmap.ic_launcher,
             itemView.userAvatar
         )
+    }
+
+    private fun changeFavoriteState(
+        model: Gist,
+        nonFavoriteResource: Int,
+        favoriteResource: Int,
+        onNotSaved: () -> Unit,
+        onSaved: () -> Unit
+    ) {
+
+        if (!model.isSaved) {
+            itemView.favoriteImageView.setImageDrawable(
+                ContextCompat.getDrawable(
+                    itemView.context,
+                    nonFavoriteResource
+                )
+            )
+            onNotSaved.invoke()
+        } else {
+            itemView.favoriteImageView.setImageDrawable(
+                ContextCompat.getDrawable(
+                    itemView.context,
+                    favoriteResource
+                )
+            )
+            onSaved.invoke()
+        }
     }
 }

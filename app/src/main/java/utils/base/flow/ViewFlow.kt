@@ -1,6 +1,6 @@
-package utils.base
+package utils.base.flow
 
-interface ActivityFlow {
+interface ViewFlow {
     fun setupView()
     fun handleViewModel()
     fun setupExtras()

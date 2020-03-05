@@ -1,11 +1,11 @@
-package br.com.caiodev.gistnator.sections.gistObtainment.model.koin
+package br.com.caiodev.gistnator.sections.gistObtainment.model.diModules
 
 import br.com.caiodev.gistnator.sections.gistObtainment.model.repository.GistListRepository
 import br.com.caiodev.gistnator.sections.gistObtainment.model.repository.GistRepository
 import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
-import utils.base.repository.RemoteRepository
+import utils.base.repository.remote.RemoteRepository
 import utils.factory.Retrofit.provideRetrofitService
 
 val gistObtainmentViewModel = module {

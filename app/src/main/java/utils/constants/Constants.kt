@@ -2,7 +2,7 @@ package utils.constants
 
 object Constants {
 
-    const val gistUrl = "gistUrl"
+    const val gistId = "gistId"
 
     //RecyclerView view types
     const val header = 0
@@ -36,4 +36,7 @@ object Constants {
 
     //Pagination
     const val numberOfItemsPerPage = 20
+
+    //Database
+    const val databaseName = "gist_database"
 }

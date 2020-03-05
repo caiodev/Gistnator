@@ -16,7 +16,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-
         <activity
             android:name=".sections.gistObtainment.view.MainActivity"
             android:configChanges="uiMode">
@@ -26,9 +25,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity android:name=".sections.gistDetails.view.GistDetailsActivity" />
-
+        <activity android:name=".sections.favoriteGists.view.FavoriteGistsActivity" />
     </application>
 
 </manifest>

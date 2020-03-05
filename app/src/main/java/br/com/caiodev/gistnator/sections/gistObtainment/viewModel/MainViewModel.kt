@@ -41,15 +41,14 @@ class MainViewModel(
     internal val errorSingleImmutableLiveDataEvent: LiveData<Int>
         get() = errorSingleMutableLiveDataEvent.toImmutableSingleLiveEvent()
 
-    //Result lists
+    //Result list
     private val gistMutableList = mutableListOf<ViewType>()
-    private var gistList: List<ViewType> = gistMutableList
 
     //Information cache variables
     internal var lastVisibleListItem = 0
 
     //Flags
-    private var pageNumber = 0
+    private var pageNumber = 1
     internal var hasForbiddenErrorBeenEmitted = false
 
     //Call related flags
@@ -69,7 +68,7 @@ class MainViewModel(
 
     internal fun requestUpdatedGithubProfiles() {
         hasAnyUserRequestedUpdatedData = true
-        pageNumber = 0
+        pageNumber = 1
         requestGithubProfiles(true)
     }
 
@@ -85,13 +84,13 @@ class MainViewModel(
         isThereAnOngoingCall = true
 
         viewModelScope.launch {
-            handleCallResult(shouldListItemsBeRemoved)
+            handleCallSuccess(shouldListItemsBeRemoved)
         }
     }
 
     //This method handles both Success an Error states and delivers the result through a LiveData post to the view. Which in this case is GithubProfileInfoObtainmentActivity
     @Suppress("UNCHECKED_CAST")
-    private suspend fun handleCallResult(
+    private suspend fun handleCallSuccess(
         shouldListItemsBeRemoved: Boolean = false
     ) {
 
@@ -108,6 +107,12 @@ class MainViewModel(
                 isThereAnOngoingCall = false
                 hasForbiddenErrorBeenEmitted = false
                 with(value.data as List<Gist>) {
+
+                    //                    this.flatMap<List<GistDatabaseParentRepository>, GistDatabaseParentRepository> { gist ->
+//                        gist.metaDataMap.forEach { metaDataMap ->
+//                            Timber.d("FileType: ${metaDataMap.value.type}")
+//                        }
+//                    }
 
                     isTheNumberOfItemsOfTheLastCallLessThanTwenty =
                         this.size < 20
@@ -126,8 +131,7 @@ class MainViewModel(
                             endOfResults, true
                         )
 
-                        this@MainViewModel.gistList = gistMutableList
-                        mainListMutableLiveData.postValue(this@MainViewModel.gistList)
+                        mainListMutableLiveData.postValue(gistMutableList.toList())
                     }
                     pageNumber++
                 }
@@ -204,16 +208,15 @@ class MainViewModel(
         if (isTheNumberOfItemsOfTheLastCallLessThanTwenty) insertTransientItemIntoTheResultsList(
             endOfResults
         )
-        gistList = gistMutableList
-        mainListMutableLiveData.postValue(gistList)
+        mainListMutableLiveData.postValue(gistMutableList.toList())
     }
 
     //This method populates the GithubUserProfile related information list which in this case is githubProfilesInfoMutableList
     private fun populateList(githubInfo: Gist) {
         gistMutableList.add(
             Gist(
-                githubInfo.url,
-                githubInfo.files,
+                githubInfo.id,
+                githubInfo.metaDataMap,
                 githubInfo.owner
             )
         )
@@ -262,22 +265,26 @@ class MainViewModel(
             }
         }
 
-        gistList = gistMutableList
-
-        if (shouldPostValue) mainListMutableLiveData.postValue(gistList)
+        if (shouldPostValue) mainListMutableLiveData.postValue(gistMutableList.toList())
     }
 
     private fun dropLast() {
         dropLast(gistMutableList)
     }
 
-    private fun hasLastCallBeenSuccessful() = gistList.isNotEmpty()
+    private fun hasLastCallBeenSuccessful() = gistMutableList.isNotEmpty()
 
-    internal fun saveFavoriteGist(listPosition: Int) {
+    internal fun saveGist(listPosition: Int) {
+        (gistMutableList[listPosition] as Gist).isSaved = true
+        mainListMutableLiveData.postValue(gistMutableList.toList())
+    }
 
+    internal fun deleteGist(listPosition: Int) {
+        (gistMutableList[listPosition] as Gist).isSaved = false
+        mainListMutableLiveData.postValue(gistMutableList.toList())
     }
 
     //This method provides a URL to the profile a user clicks on a List item
-    internal fun provideGistUrl(index: Int) =
-        (gistMutableList[index] as Gist).url
+    internal fun provideGistId(index: Int) =
+        (gistMutableList[index] as Gist).id
 }

@@ -43,20 +43,31 @@
                 android:fontFamily="@font/nunito_regular"
                 android:textColor="@color/black"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/favoriteCheckBox"
+                app:layout_constraintEnd_toStartOf="@+id/favoriteImageView"
                 app:layout_constraintStart_toEndOf="@+id/userAvatar"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <CheckBox
-                android:id="@+id/favoriteCheckBox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="?android:attr/starStyle"
-                android:theme="@style/StarShapedCheckBoxTheme"
-                android:contentDescription="A star shaped image to save the gist as a favorite"
+            <ImageView
+                android:id="@+id/favoriteImageView"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="@dimen/margin_8dp"
+                android:src="@drawable/ic_favorite_border"
+                android:contentDescription="A heart shaped image to save the gist as a favorite"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+<!--            <CheckBox-->
+<!--                android:id="@+id/favoriteCheckBox"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                style="?android:attr/starStyle"-->
+<!--                android:theme="@style/StarShapedCheckBoxTheme"-->
+<!--                android:contentDescription="A star shaped image to save the gist as a favorite"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent" />-->
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

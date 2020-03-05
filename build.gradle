@@ -18,7 +18,7 @@ buildscript {
         gradleVersion = '3.6.1'
 
         //Koin
-        koin = '2.1.0-alpha-3'
+        koin = '2.1.1'
 
         //Kotlin
         kotlin = '1.3.61'
@@ -27,7 +27,7 @@ buildscript {
         ktxCore = '1.3.0-alpha01'
 
         //LeakCanary
-        leakCanary = '2.0-beta-3'
+        leakCanary = '2.2'
 
         //Lifecycle Architecture components
         arch = '2.2.0'
@@ -40,6 +40,9 @@ buildscript {
 
         //Retrofit
         retrofit = '2.7.2'
+
+        //Room
+        room = '2.2.4'
 
         //SwipeRefreshLayout
         swipeRefreshLayout = '1.1.0-alpha03'
@@ -67,7 +70,6 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:$gradleVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin"
-        classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin"
     }
 
     repositories {
@@ -107,12 +109,19 @@ allprojects {
                 includeGroup "com.google.j2objc"
                 includeGroup "com.google.truth"
                 includeGroup "com.googlecode.java-diff-utils"
+                includeGroup "com.ibm.icu"
                 includeGroup "com.linkedin.dexmaker"
+                includeGroup "commons-codec"
                 includeGroup "net.bytebuddy"
+                includeGroup "net.java"
                 includeGroup "net.sf.kxml"
+                includeGroup "org.abego.treelayout"
+                includeGroup "org.antlr"
                 includeGroup "org.apiguardian"
                 includeGroup "org.checkerframework"
+                includeGroup "org.codehaus"
                 includeGroup "org.codehaus.mojo"
+                includeGroup "org.glassfish"
                 includeGroup "org.hamcrest"
                 includeGroup "org.jacoco"
                 includeGroup "org.junit.jupiter"
@@ -124,6 +133,7 @@ allprojects {
                 includeGroup "org.ow2"
                 includeGroup "org.ow2.asm"
                 includeGroup "org.sonatype.oss"
+                includeGroup "org.xerial"
             }
         }
 

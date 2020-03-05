@@ -10,14 +10,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.idling.CountingIdlingResource
 import br.com.caiodev.gistnator.R
-import br.com.caiodev.gistnator.sections.gistDetails.view.GistDetailsActivity
+import br.com.caiodev.gistnator.sections.favoriteGists.view.FavoriteGistsActivity
 import br.com.caiodev.gistnator.sections.gistObtainment.model.adapter.GistAdapter
 import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import timber.log.Timber
-import utils.base.ActivityFlow
-import utils.constants.Constants
+import utils.base.flow.ViewFlow
 import utils.constants.Constants.favorite
 import utils.constants.Constants.gistCell
 import utils.constants.Constants.retry
@@ -30,7 +28,7 @@ import utils.snackBar.CustomSnackBar
 
 class MainActivity :
     AppCompatActivity(R.layout.activity_main),
-    ActivityFlow {
+    ViewFlow {
 
     private var shouldRecyclerViewAnimationBeExecuted = true
     private var hasBackToTopButtonBeenClicked = false
@@ -55,8 +53,7 @@ class MainActivity :
 
     private fun performCall() {
         if (!viewModel.hasFirstSuccessfulCallBeenMade)
-            applyViewVisibility(repositoryLoadingProgressBar, View.VISIBLE)
-        viewModel.requestUpdatedGithubProfiles()
+            callApiThroughViewModel { viewModel.requestUpdatedGithubProfiles() }
     }
 
     override fun setupView() {
@@ -94,7 +91,7 @@ class MainActivity :
 
         gistAdapter.setOnItemClicked(object : OnItemClicked {
 
-            override fun onItemClick(adapterPosition: Int, id: Int) {
+            override fun onItemClick(adapterPosition: Int, id: Int, shouldBeDeleted: Boolean) {
 
                 when (id) {
                     gistCell -> {
@@ -103,22 +100,24 @@ class MainActivity :
                                 startActivity(
                                     Intent(
                                         applicationContext,
-                                        GistDetailsActivity::class.java
+                                        FavoriteGistsActivity::class.java
                                     )
-                                        .putExtra(
-                                            Constants.gistUrl,
-                                            viewModel.provideGistUrl(
-                                                adapterPosition
-                                            )
-                                        )
+//                                        .putExtra(
+//                                            Constants.gistId,
+//                                            viewModel.provideGistId(
+//                                                adapterPosition
+//                                            )
+//                                        )
                                 )
                             },
                             onConnectionUnavailable = { showInternetConnectionStatusSnackBar(false) })
                     }
 
                     favorite -> {
-                        viewModel.saveFavoriteGist(adapterPosition)
-                        Timber.d("StarActivated!")
+                        if (shouldBeDeleted)
+                            viewModel.deleteGist(adapterPosition)
+                        else
+                            viewModel.saveGist(adapterPosition)
                     }
 
                     retry -> paginationCall()
@@ -132,7 +131,7 @@ class MainActivity :
     }
 
     private fun paginationCall() {
-        viewModel.requestMoreGithubProfiles()
+        callApiThroughViewModel { viewModel.requestMoreGithubProfiles() }
     }
 
     override fun handleViewModel() {
@@ -228,6 +227,7 @@ class MainActivity :
             onConnectionAvailable = {
                 viewModel.shouldASearchBePerformed = false
                 genericFunction.invoke()
+                applyViewVisibility(repositoryLoadingProgressBar, View.VISIBLE)
                 if (this::countingIdlingResource.isInitialized)
                     countingIdlingResource.increment()
             },
@@ -275,7 +275,7 @@ class MainActivity :
                             }
                         } else
                             if (!viewModel.isThereAnOngoingCall)
-                                viewModel.requestUpdatedGithubProfiles()
+                                callApiThroughViewModel { viewModel.requestUpdatedGithubProfiles() }
                     }
                     false -> showInternetConnectionStatusSnackBar(false)
                 }

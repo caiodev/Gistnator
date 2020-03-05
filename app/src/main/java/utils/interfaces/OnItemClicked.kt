@@ -1,5 +1,5 @@
 package utils.interfaces
 
 interface OnItemClicked {
-    fun onItemClick(adapterPosition: Int, id: Int)
+    fun onItemClick(adapterPosition: Int, id: Int, shouldBeDeleted: Boolean = false)
 }
