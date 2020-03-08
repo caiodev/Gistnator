@@ -23,7 +23,7 @@
             android:background="?attr/selectableItemBackground">
 
             <ImageView
-                android:id="@+id/userAvatar"
+                android:id="@+id/userAvatarImageView"
                 android:layout_width="@dimen/user_avatar_size"
                 android:layout_height="@dimen/view_102dp"
                 android:scaleType="fitXY"
@@ -34,40 +34,33 @@
                 tools:ignore="ContentDescription" />
 
             <TextView
-                android:id="@+id/userLogin"
-                style="@style/ViewStyle"
+                android:id="@+id/userLoginTextView"
+                style="@style/TextViewStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/margin_8dp"
-                android:layout_marginEnd="@dimen/margin_8dp"
-                android:fontFamily="@font/nunito_regular"
-                android:textColor="@color/black"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/favoriteImageView"
-                app:layout_constraintStart_toEndOf="@+id/userAvatar"
+                app:layout_constraintBottom_toTopOf="@+id/gistTypeTextView"
+                app:layout_constraintEnd_toStartOf="@+id/saveFavoriteComponent"
+                app:layout_constraintStart_toEndOf="@+id/userAvatarImageView"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/favoriteImageView"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
+            <TextView
+                android:id="@+id/gistTypeTextView"
+                style="@style/TextViewStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/saveFavoriteComponent"
+                app:layout_constraintStart_toEndOf="@+id/userAvatarImageView"
+                app:layout_constraintTop_toBottomOf="@+id/userLoginTextView" />
+
+            <include layout="@layout/heart_component"
+                android:id="@+id/saveFavoriteComponent"
+                android:layout_width="@dimen/view_32dp"
+                android:layout_height="@dimen/view_32dp"
                 android:layout_marginEnd="@dimen/margin_8dp"
-                android:src="@drawable/ic_favorite_border"
-                android:contentDescription="A heart shaped image to save the gist as a favorite"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
-<!--            <CheckBox-->
-<!--                android:id="@+id/favoriteCheckBox"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                style="?android:attr/starStyle"-->
-<!--                android:theme="@style/StarShapedCheckBoxTheme"-->
-<!--                android:contentDescription="A star shaped image to save the gist as a favorite"-->
-<!--                app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                app:layout_constraintEnd_toEndOf="parent"-->
-<!--                app:layout_constraintTop_toTopOf="parent" />-->
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -7,6 +7,43 @@
     android:layout_height="match_parent"
     tools:context=".sections.gistObtainment.view.MainActivity">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/mainToolbar"
+        android:layout_width="0dp"
+        android:background="@color/colorPrimary"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/goToFavoritesActivityLinearLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:background="?selectableItemBackground"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="@dimen/margin_8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/mainToolbar"
+        android:orientation="horizontal">
+
+        <include
+            android:id="@+id/saveFavoriteComponent"
+            layout="@layout/heart_component"
+            android:layout_gravity="center_vertical"
+            android:layout_width="@dimen/view_32dp"
+            android:layout_height="@dimen/view_32dp" />
+
+        <TextView
+            android:id="@+id/favoriteTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            style="@style/TextViewStyleWhite"
+            android:text="Favorites" />
+
+    </LinearLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/githubProfileListSwipeRefreshLayout"
         android:layout_width="0dp"
@@ -15,7 +52,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/mainToolbar">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/profileInfoRecyclerView"

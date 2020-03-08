@@ -16,6 +16,6 @@ interface GistDao {
     @Insert
     suspend fun insertGistIntoTable(gistProperties: GistProperties)
 
-    @Delete
-    suspend fun deleteGist(gistProperties: GistProperties)
+    @Query("DELETE FROM GistProperties " + "WHERE id = :gistId")
+    suspend fun deleteGist(gistId: String)
 }

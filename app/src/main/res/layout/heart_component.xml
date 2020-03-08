@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/favoriteImageView"
+        android:layout_width="@dimen/view_32dp"
+        android:layout_height="@dimen/view_32dp"
+        android:src="@drawable/ic_favorite_border"
+        tools:ignore="ContentDescription" />
+
+</LinearLayout>

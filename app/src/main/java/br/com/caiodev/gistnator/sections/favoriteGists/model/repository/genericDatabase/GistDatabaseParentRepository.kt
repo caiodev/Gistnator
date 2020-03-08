@@ -2,8 +2,8 @@ package br.com.caiodev.gistnator.sections.favoriteGists.model.repository.generic
 
 import br.com.caiodev.gistnator.sections.favoriteGists.model.GistProperties
 
-interface GistDatabaseRepository {
+interface GistDatabaseParentRepository {
     suspend fun obtainPaginatedGists(): List<GistProperties>
     suspend fun insertGistIntoTable(gistProperties: GistProperties)
-    suspend fun deleteGist(gistProperties: GistProperties)
+    suspend fun deleteGist(gistId: String)
 }

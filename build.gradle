@@ -3,7 +3,7 @@ buildscript {
     ext {
 
         //AndroidXCore
-        androidXCore = '1.3.0-alpha01'
+        androidXCore = '1.3.0-alpha02'
 
         //AppCompat
         appCompat = '1.1.0'
@@ -17,23 +17,20 @@ buildscript {
         //Gradle
         gradleVersion = '3.6.1'
 
-        //Koin
-        koin = '2.1.1'
-
         //Kotlin
-        kotlin = '1.3.61'
+        kotlin = '1.3.70'
 
         //Ktx
-        ktxCore = '1.3.0-alpha01'
-
-        //LeakCanary
-        leakCanary = '2.2'
+        ktxCore = '1.3.0-alpha02'
 
         //Lifecycle Architecture components
         arch = '2.2.0'
 
         //Material design
         materialDesign = '1.2.0-alpha05'
+
+        //Multidex
+        multidex = "2.0.1"
 
         //OkHttp
         okHttp = '4.4.0'
@@ -45,7 +42,7 @@ buildscript {
         room = '2.2.4'
 
         //SwipeRefreshLayout
-        swipeRefreshLayout = '1.1.0-alpha03'
+        swipeRefreshLayout = '1.1.0-beta01'
 
         //Timber
         timber = '4.7.1'

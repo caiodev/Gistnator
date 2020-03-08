@@ -1,4 +1,4 @@
-package utils.imageLoading
+package utils.imageProcessing
 
 import android.widget.ImageView
 import coil.api.load

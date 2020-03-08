@@ -1,27 +1,35 @@
 package br.com.caiodev.gistnator.sections.gistObtainment.view
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.idling.CountingIdlingResource
 import br.com.caiodev.gistnator.R
 import br.com.caiodev.gistnator.sections.favoriteGists.view.FavoriteGistsActivity
+import br.com.caiodev.gistnator.sections.gistDetails.view.GistDetailsActivity
 import br.com.caiodev.gistnator.sections.gistObtainment.model.adapter.GistAdapter
 import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModel
+import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import utils.base.flow.ViewFlow
+import utils.constants.Constants
 import utils.constants.Constants.favorite
 import utils.constants.Constants.gistCell
+import utils.constants.Constants.itemDeleted
+import utils.constants.Constants.itemInserted
 import utils.constants.Constants.retry
 import utils.extensions.applyViewVisibility
+import utils.extensions.castAttributeThroughViewModel
 import utils.extensions.showSnackBar
 import utils.interfaces.OnItemClicked
+import utils.interfaces.viewTypes.ViewType
 import utils.network.NetworkChecking.checkIfInternetConnectionIsAvailable
 import utils.network.NetworkChecking.internetConnectionAvailabilityObservable
 import utils.snackBar.CustomSnackBar
@@ -36,14 +44,15 @@ class MainActivity :
 
     private lateinit var customSnackBar: CustomSnackBar
 
-    private val viewModel by viewModel<MainViewModel>()
+    private val viewModel: MainViewModel by lazy {
+        ViewModelProvider(this, MainViewModelFactory()).get(MainViewModel::class.java)
+    }
 
     private val gistAdapter by lazy {
         GistAdapter()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.AppTheme)
         super.onCreate(savedInstanceState)
         setupView()
         handleViewModel()
@@ -58,6 +67,8 @@ class MainActivity :
 
     override fun setupView() {
 
+        setSupportActionBar(mainToolbar)
+
         //Condition when users rotate the screen and the activity gets destroyed
         if (viewModel.isThereAnOngoingCall) {
             applyViewVisibility(repositoryLoadingProgressBar, View.VISIBLE)
@@ -65,6 +76,10 @@ class MainActivity :
         }
 
         if (viewModel.lastVisibleListItem >= 10) applyViewVisibility(backToTopButton, View.VISIBLE)
+
+        goToFavoritesActivityLinearLayout.setOnClickListener {
+            startActivity(Intent(applicationContext, FavoriteGistsActivity::class.java))
+        }
 
         customSnackBar = CustomSnackBar.make(this.findViewById(android.R.id.content))
 
@@ -91,7 +106,12 @@ class MainActivity :
 
         gistAdapter.setOnItemClicked(object : OnItemClicked {
 
-            override fun onItemClick(adapterPosition: Int, id: Int, shouldBeDeleted: Boolean) {
+            override fun onItemClick(
+                adapterPosition: Int,
+                id: Int,
+                shouldBeDeleted: Boolean,
+                itemImage: Bitmap?
+            ) {
 
                 when (id) {
                     gistCell -> {
@@ -100,14 +120,13 @@ class MainActivity :
                                 startActivity(
                                     Intent(
                                         applicationContext,
-                                        FavoriteGistsActivity::class.java
+                                        GistDetailsActivity::class.java
+                                    ).putExtra(
+                                        Constants.gistId,
+                                        viewModel.provideGistId(
+                                            adapterPosition
+                                        )
                                     )
-//                                        .putExtra(
-//                                            Constants.gistId,
-//                                            viewModel.provideGistId(
-//                                                adapterPosition
-//                                            )
-//                                        )
                                 )
                             },
                             onConnectionUnavailable = { showInternetConnectionStatusSnackBar(false) })
@@ -117,7 +136,9 @@ class MainActivity :
                         if (shouldBeDeleted)
                             viewModel.deleteGist(adapterPosition)
                         else
-                            viewModel.saveGist(adapterPosition)
+                            itemImage?.let {
+                                viewModel.saveGist(adapterPosition, it)
+                            }
                     }
 
                     retry -> paginationCall()
@@ -141,38 +162,60 @@ class MainActivity :
 
     private fun onSuccess() {
 
-        viewModel.mainListLiveData.observe(this) { githubUsersList ->
+        viewModel.liveData.observe(this) { value ->
 
-            if (this::countingIdlingResource.isInitialized)
-                countingIdlingResource.decrement()
+            when (value) {
 
-            viewModel.shouldASearchBePerformed = false
-            applyViewVisibility(githubProfileListSwipeRefreshLayout)
+                is List<*> -> {
 
-            shouldRecyclerViewAnimationBeExecuted =
-                if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
-                    gistAdapter.updateDataSource(githubUsersList)
-                    true
-                } else {
-                    gistAdapter.updateDataSource(githubUsersList)
-                    profileInfoRecyclerView.adapter?.notifyDataSetChanged()
-                    applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
-                    false
+                    with(viewModel.castAttributeThroughViewModel<List<ViewType>>(value)) {
+
+                        if (this@MainActivity::countingIdlingResource.isInitialized)
+                            countingIdlingResource.decrement()
+
+                        viewModel.shouldASearchBePerformed = false
+                        applyViewVisibility(githubProfileListSwipeRefreshLayout)
+
+                        shouldRecyclerViewAnimationBeExecuted =
+                            if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
+                                gistAdapter.updateDataSource(this)
+                                true
+                            } else {
+                                gistAdapter.updateDataSource(this)
+                                profileInfoRecyclerView.adapter?.notifyDataSetChanged()
+                                applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+                                false
+                            }
+
+                        if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest =
+                            false
+
+                        if (viewModel.hasAnyUserRequestedUpdatedData) {
+                            applyViewVisibility(githubProfileListSwipeRefreshLayout)
+                            gistAdapter.updateDataSource(this)
+                            shouldRecyclerViewAnimationBeExecuted = true
+                            viewModel.hasAnyUserRequestedUpdatedData = false
+                        }
+
+                        if (shouldRecyclerViewAnimationBeExecuted)
+                            runLayoutAnimation(profileInfoRecyclerView)
+                        else
+                            shouldRecyclerViewAnimationBeExecuted = true
+                    }
                 }
 
-            if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest = false
+                is Int -> {
 
-            if (viewModel.hasAnyUserRequestedUpdatedData) {
-                applyViewVisibility(githubProfileListSwipeRefreshLayout)
-                gistAdapter.updateDataSource(githubUsersList)
-                shouldRecyclerViewAnimationBeExecuted = true
-                viewModel.hasAnyUserRequestedUpdatedData = false
+                    when (value) {
+
+                        itemInserted ->
+                            showSnackBar(this, "Gist saved") {}
+
+                        itemDeleted ->
+                            showSnackBar(this, "Gist deleted") {}
+                    }
+                }
             }
-
-            if (shouldRecyclerViewAnimationBeExecuted)
-                runLayoutAnimation(profileInfoRecyclerView)
-            else
-                shouldRecyclerViewAnimationBeExecuted = true
         }
     }
 

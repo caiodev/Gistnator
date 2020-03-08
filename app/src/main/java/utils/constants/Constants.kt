@@ -20,11 +20,15 @@ object Constants {
 
     //Error
     //Exceptions
+    //Remote
     const val connectException = 2
     const val genericException = 3
     const val socketTimeoutException = 4
     const val sslHandshakeException = 5
     const val unknownHostException = 6
+
+    //Local
+    const val sqliteConstraintException = 7
 
     //HTTP codes
     const val clientSideError = 7
@@ -39,4 +43,6 @@ object Constants {
 
     //Database
     const val databaseName = "gist_database"
+    const val itemDeleted = 0
+    const val itemInserted = 1
 }

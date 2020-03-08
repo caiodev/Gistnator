@@ -85,11 +85,6 @@ dependencies {
     implementation "androidx.constraintlayout:constraintlayout:$constraintLayout"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swipeRefreshLayout"
 
-    //Koin
-    implementation "org.koin:koin-android:$koin"
-    implementation "org.koin:koin-androidx-scope:$koin"
-    implementation "org.koin:koin-androidx-viewmodel:$koin"
-
     //Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin"
 
@@ -97,9 +92,6 @@ dependencies {
     implementation "androidx.core:core-ktx:$ktxCore"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$arch"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$arch"
-
-    //LeakCanary
-    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanary"
 
     //Lifecycle section
     implementation "androidx.lifecycle:lifecycle-viewmodel:$arch"
@@ -113,6 +105,9 @@ dependencies {
 
     //Material design
     implementation "com.google.android.material:material:$materialDesign"
+
+    //Multidex
+    implementation "androidx.multidex:multidex:$multidex"
 
     //Retrofit
     implementation "com.squareup.retrofit2:retrofit:$retrofit"

@@ -1,10 +1,14 @@
 package br.com.caiodev.gistnator.sections.gistObtainment.viewModel
 
+import android.database.sqlite.SQLiteConstraintException
+import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.caiodev.gistnator.R
+import br.com.caiodev.gistnator.sections.favoriteGists.model.GistProperties
+import br.com.caiodev.gistnator.sections.favoriteGists.model.repository.genericDatabase.GistDatabaseParentRepository
 import br.com.caiodev.gistnator.sections.gistObtainment.model.repository.GistRepository
 import br.com.caiodev.gistnator.sections.gistObtainment.model.viewTypes.*
 import kotlinx.coroutines.launch
@@ -12,6 +16,8 @@ import utils.constants.Constants.clientSideError
 import utils.constants.Constants.connectException
 import utils.constants.Constants.endOfResults
 import utils.constants.Constants.forbidden
+import utils.constants.Constants.itemDeleted
+import utils.constants.Constants.itemInserted
 import utils.constants.Constants.loading
 import utils.constants.Constants.numberOfItemsPerPage
 import utils.constants.Constants.retry
@@ -21,19 +27,20 @@ import utils.constants.Constants.sslHandshakeException
 import utils.constants.Constants.unknownHostException
 import utils.extensions.dropLast
 import utils.extensions.toImmutableSingleLiveEvent
+import utils.imageProcessing.ImageConverter.convertFromBitmapToBase64
 import utils.interfaces.viewTypes.ViewType
 import utils.liveEvent.SingleLiveEvent
 import utils.service.APICallResult
 
 class MainViewModel(
     private val repository:
-    GistRepository
+    GistRepository, private val favoriteGistRepository: GistDatabaseParentRepository
 ) : ViewModel() {
 
     //Success LiveDatas
-    private val mainListMutableLiveData = MutableLiveData<List<ViewType>>()
-    internal val mainListLiveData: LiveData<List<ViewType>>
-        get() = mainListMutableLiveData
+    private val mutableLiveData = MutableLiveData<Any>()
+    internal val liveData: LiveData<Any>
+        get() = mutableLiveData
 
     //Error LiveDatas
     private val errorSingleMutableLiveDataEvent =
@@ -108,12 +115,6 @@ class MainViewModel(
                 hasForbiddenErrorBeenEmitted = false
                 with(value.data as List<Gist>) {
 
-                    //                    this.flatMap<List<GistDatabaseParentRepository>, GistDatabaseParentRepository> { gist ->
-//                        gist.metaDataMap.forEach { metaDataMap ->
-//                            Timber.d("FileType: ${metaDataMap.value.type}")
-//                        }
-//                    }
-
                     isTheNumberOfItemsOfTheLastCallLessThanTwenty =
                         this.size < 20
 
@@ -131,7 +132,7 @@ class MainViewModel(
                             endOfResults, true
                         )
 
-                        mainListMutableLiveData.postValue(gistMutableList.toList())
+                        mutableLiveData.postValue(gistMutableList.toList())
                     }
                     pageNumber++
                 }
@@ -200,7 +201,7 @@ class MainViewModel(
         isPaginationLoadingListItemVisible = false
         isRetryListItemVisible = false
         isEndOfResultsListItemVisible = false
-        gistMutableList.add(Header(R.string.github_user_list_header))
+        gistMutableList.add(Header(R.string.gist_list_header))
         githubUserInformationList.forEach {
             populateList(it)
         }
@@ -208,7 +209,7 @@ class MainViewModel(
         if (isTheNumberOfItemsOfTheLastCallLessThanTwenty) insertTransientItemIntoTheResultsList(
             endOfResults
         )
-        mainListMutableLiveData.postValue(gistMutableList.toList())
+        mutableLiveData.postValue(gistMutableList.toList())
     }
 
     //This method populates the GithubUserProfile related information list which in this case is githubProfilesInfoMutableList
@@ -265,7 +266,7 @@ class MainViewModel(
             }
         }
 
-        if (shouldPostValue) mainListMutableLiveData.postValue(gistMutableList.toList())
+        if (shouldPostValue) mutableLiveData.postValue(gistMutableList.toList())
     }
 
     private fun dropLast() {
@@ -274,17 +275,52 @@ class MainViewModel(
 
     private fun hasLastCallBeenSuccessful() = gistMutableList.isNotEmpty()
 
-    internal fun saveGist(listPosition: Int) {
-        (gistMutableList[listPosition] as Gist).isSaved = true
-        mainListMutableLiveData.postValue(gistMutableList.toList())
+    internal fun saveGist(listPosition: Int, bitmap: Bitmap) {
+
+        viewModelScope.launch {
+
+            with((gistMutableList[listPosition] as Gist)) {
+
+                try {
+
+                    isSaved = true
+                    mutableLiveData.postValue(gistMutableList.toList())
+
+                    convertFromBitmapToBase64(bitmap)?.let {
+                        favoriteGistRepository.insertGistIntoTable(
+                            GistProperties(
+                                id,
+                                it,
+                                owner.login,
+                                metaDataMap
+                            )
+                        )
+                    }
+                    mutableLiveData.postValue(itemInserted)
+                } catch (sqliteConstraintException: SQLiteConstraintException) {
+                    isSaved = false
+                    mutableLiveData.postValue(gistMutableList.toList())
+                    errorPairProvider(
+                        R.string.sqlite_constraint_exception,
+                        errorSingleMutableLiveDataEvent
+                    )
+                }
+            }
+        }
     }
 
     internal fun deleteGist(listPosition: Int) {
-        (gistMutableList[listPosition] as Gist).isSaved = false
-        mainListMutableLiveData.postValue(gistMutableList.toList())
+        (gistMutableList[listPosition] as Gist).apply {
+            isSaved = false
+            mutableLiveData.postValue(gistMutableList.toList())
+            viewModelScope.launch {
+                favoriteGistRepository.deleteGist(id)
+                mutableLiveData.postValue(itemDeleted)
+            }
+        }
     }
 
-    //This method provides a URL to the profile a user clicks on a List item
+    //This method provides a URL to a profile when users click on a List item
     internal fun provideGistId(index: Int) =
         (gistMutableList[index] as Gist).id
 }

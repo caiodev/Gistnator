@@ -3,9 +3,9 @@ package br.com.caiodev.gistnator.sections.favoriteGists.model.repository
 import androidx.room.RoomDatabase
 import br.com.caiodev.gistnator.sections.favoriteGists.model.GistProperties
 import br.com.caiodev.gistnator.sections.favoriteGists.model.repository.database.GistDatabase
-import br.com.caiodev.gistnator.sections.favoriteGists.model.repository.genericDatabase.GistDatabaseRepository
+import br.com.caiodev.gistnator.sections.favoriteGists.model.repository.genericDatabase.GistDatabaseParentRepository
 
-class GistDatabaseRepository(database: RoomDatabase) : GistDatabaseRepository {
+class GistDatabaseRepository(database: RoomDatabase) : GistDatabaseParentRepository {
 
     private val gistDatabase = (database as GistDatabase).provideDao()
 
@@ -16,7 +16,7 @@ class GistDatabaseRepository(database: RoomDatabase) : GistDatabaseRepository {
         gistDatabase.insertGistIntoTable(gistProperties)
     }
 
-    override suspend fun deleteGist(gistProperties: GistProperties) {
-        gistDatabase.deleteGist(gistProperties)
+    override suspend fun deleteGist(gistId: String) {
+        gistDatabase.deleteGist(gistId)
     }
 }

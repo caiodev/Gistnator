@@ -7,22 +7,23 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="ViewStyle" parent="AppTheme">
-        <item name="android:layout_marginLeft">@dimen/margin_8dp</item>
-        <item name="android:layout_marginRight">@dimen/margin_8dp</item>
+    <style name="TextViewStyle" parent="AppTheme">
+        <item name="android:layout_marginStart">@dimen/margin_8dp</item>
+        <item name="android:layout_marginEnd">@dimen/margin_8dp</item>
         <item name="android:textColor">@color/black</item>
-        <item name="android:textSize">@dimen/repository_info_text_size</item>
+        <item name="android:textSize">@dimen/gist_info_text_size</item>
         <item name="android:ellipsize">end</item>
         <item name="android:maxLines">1</item>
+        <item name="android:fontFamily">@font/nunito_regular</item>
+    </style>
+
+    <style name="TextViewStyleWhite" parent="TextViewStyle">
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
     <style name="MarginViewStyle" parent="AppTheme">
         <item name="android:layout_marginLeft">@dimen/margin_8dp</item>
         <item name="android:layout_marginRight">@dimen/margin_8dp</item>
-    </style>
-
-    <style name="StarShapedCheckBoxTheme" parent="AppTheme">
-        <item name="colorAccent">#FFD700</item>
     </style>
 
 </resources>

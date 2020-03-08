@@ -4,32 +4,30 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.caiodev.gistnator.sections.favoriteGists.model.GistProperties
-import br.com.caiodev.gistnator.sections.favoriteGists.model.repository.genericDatabase.GistDatabaseRepository
+import br.com.caiodev.gistnator.sections.favoriteGists.model.repository.genericDatabase.GistDatabaseParentRepository
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class FavoriteGistsViewModel(private val repository: GistDatabaseRepository) : ViewModel() {
+class FavoriteGistsViewModel(private val repository: GistDatabaseParentRepository) : ViewModel() {
 
     val liveData = MutableLiveData<Any>()
 
-    fun obtainPaginatedGists() {
+    fun obtainPaginatedListOfGists() {
         viewModelScope.launch {
             val value = repository.obtainPaginatedGists()
-            Timber.d("RoomGist: ${value[0].id}")
+
+            value.forEach {
+                Timber.d("GistOwnerImages: ${it.ownerImage}")
+            }
+
             liveData.postValue(value)
         }
     }
 
-    fun insertGistIntoTable(gistProperties: GistProperties) {
+    fun deleteGist(gistId: String) {
         viewModelScope.launch {
-            repository.insertGistIntoTable(gistProperties)
-            liveData.postValue(123)
-        }
-    }
+            repository.deleteGist(gistId)
 
-    fun deleteGist(gistProperties: GistProperties) {
-        viewModelScope.launch {
-            repository.deleteGist(gistProperties)
         }
     }
 }
