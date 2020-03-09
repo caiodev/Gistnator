@@ -1,4 +1,4 @@
-package br.com.caiodev.gistnator.sections.gistObtainment.model.adapter
+package br.com.caiodev.gistnator.sections.gistObtainment.view.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

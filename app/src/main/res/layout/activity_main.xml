@@ -10,8 +10,8 @@
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/mainToolbar"
         android:layout_width="0dp"
-        android:background="@color/colorPrimary"
         android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -20,49 +20,41 @@
         android:id="@+id/goToFavoritesActivityLinearLayout"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:background="?selectableItemBackground"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="@dimen/margin_8dp"
+        android:background="?selectableItemBackground"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="@+id/mainToolbar"
-        android:orientation="horizontal">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <include
             android:id="@+id/saveFavoriteComponent"
             layout="@layout/heart_component"
-            android:layout_gravity="center_vertical"
             android:layout_width="@dimen/view_32dp"
-            android:layout_height="@dimen/view_32dp" />
+            android:layout_height="@dimen/view_32dp"
+            android:layout_gravity="center_vertical" />
 
         <TextView
             android:id="@+id/favoriteTextView"
+            style="@style/TextViewStyleWhite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            style="@style/TextViewStyleWhite"
-            android:text="Favorites" />
+            android:text="@string/favorites_button_message" />
 
     </LinearLayout>
 
-    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/githubProfileListSwipeRefreshLayout"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/gistRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="gone"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/padding_8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/mainToolbar">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/profileInfoRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:paddingBottom="@dimen/padding_8dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        app:layout_constraintTop_toBottomOf="@+id/mainToolbar" />
 
     <ImageView
         android:id="@+id/backToTopButton"

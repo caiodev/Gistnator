@@ -10,24 +10,26 @@ import timber.log.Timber
 
 class FavoriteGistsViewModel(private val repository: GistDatabaseParentRepository) : ViewModel() {
 
-    val liveData = MutableLiveData<Any>()
+    val liveData = MutableLiveData<List<GistProperties>>()
+
+    private var favoriteGistList = mutableListOf<GistProperties>()
 
     fun obtainPaginatedListOfGists() {
+
         viewModelScope.launch {
+
             val value = repository.obtainPaginatedGists()
 
-            value.forEach {
-                Timber.d("GistOwnerImages: ${it.ownerImage}")
-            }
-
-            liveData.postValue(value)
+            favoriteGistList.clear()
+            favoriteGistList.addAll(value)
+            liveData.postValue(favoriteGistList.toList())
         }
     }
 
-    fun deleteGist(gistId: String) {
+    fun deleteGist(index: Int) {
         viewModelScope.launch {
-            repository.deleteGist(gistId)
-
+            repository.deleteGist(favoriteGistList[index].id)
+            obtainPaginatedListOfGists()
         }
     }
 }

@@ -41,9 +41,6 @@ buildscript {
         //Room
         room = '2.2.4'
 
-        //SwipeRefreshLayout
-        swipeRefreshLayout = '1.1.0-beta01'
-
         //Timber
         timber = '4.7.1'
 

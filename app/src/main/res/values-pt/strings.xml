@@ -14,4 +14,5 @@
     <string name="end_of_results">Fim dos resultados</string>
     <string name="gist_type">Contém %s arquivos</string>
     <string name="sqlite_constraint_exception">O Gist escolhido já foi salvo</string>
+    <string name="favorites_button_message">Favoritos</string>
 </resources>

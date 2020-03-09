@@ -83,7 +83,6 @@ dependencies {
 
     //Layouts
     implementation "androidx.constraintlayout:constraintlayout:$constraintLayout"
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swipeRefreshLayout"
 
     //Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin"

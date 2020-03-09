@@ -2,6 +2,7 @@
     <string name="app_name" translatable="false">Gistnator</string>
 
     <!--User information-->
+    <string name="favorites_button_message">Favorites</string>
     <string name="gist_type">Contains %s files</string>
     <string name="gist_list_header">Gists</string>
     <string name="retry_button_message">Retry</string>

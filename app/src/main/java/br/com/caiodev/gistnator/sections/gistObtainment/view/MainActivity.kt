@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,10 +15,12 @@ import androidx.test.espresso.idling.CountingIdlingResource
 import br.com.caiodev.gistnator.R
 import br.com.caiodev.gistnator.sections.favoriteGists.view.FavoriteGistsActivity
 import br.com.caiodev.gistnator.sections.gistDetails.view.GistDetailsActivity
-import br.com.caiodev.gistnator.sections.gistObtainment.model.adapter.GistAdapter
+import br.com.caiodev.gistnator.sections.gistObtainment.view.adapter.GistAdapter
 import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModel
 import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
+import kotlinx.android.synthetic.main.heart_component.view.*
 import utils.base.flow.ViewFlow
 import utils.constants.Constants
 import utils.constants.Constants.favorite
@@ -27,6 +30,7 @@ import utils.constants.Constants.itemInserted
 import utils.constants.Constants.retry
 import utils.extensions.applyViewVisibility
 import utils.extensions.castAttributeThroughViewModel
+import utils.extensions.changeDrawable
 import utils.extensions.showSnackBar
 import utils.interfaces.OnItemClicked
 import utils.interfaces.viewTypes.ViewType
@@ -38,7 +42,6 @@ class MainActivity :
     AppCompatActivity(R.layout.activity_main),
     ViewFlow {
 
-    private var shouldRecyclerViewAnimationBeExecuted = true
     private var hasBackToTopButtonBeenClicked = false
     private lateinit var countingIdlingResource: CountingIdlingResource
 
@@ -77,6 +80,8 @@ class MainActivity :
 
         if (viewModel.lastVisibleListItem >= 10) applyViewVisibility(backToTopButton, View.VISIBLE)
 
+        changeDrawable(saveFavoriteComponent.favoriteImageView, R.drawable.ic_saved_favorite)
+
         goToFavoritesActivityLinearLayout.setOnClickListener {
             startActivity(Intent(applicationContext, FavoriteGistsActivity::class.java))
         }
@@ -92,13 +97,7 @@ class MainActivity :
             scrollToTop(true)
         }
 
-        githubProfileListSwipeRefreshLayout.setOnRefreshListener {
-            viewModel.hasAnyUserRequestedUpdatedData = true
-            viewModel.hasUserTriggeredANewRequest = true
-            swipeRefreshCall()
-        }
-
-        profileInfoRecyclerView.apply {
+        gistRecyclerView.apply {
             setHasFixedSize(true)
             adapter = gistAdapter
             setupRecyclerViewAddOnScrollListener()
@@ -147,10 +146,6 @@ class MainActivity :
         })
     }
 
-    private fun swipeRefreshCall() {
-        callApiThroughViewModel { viewModel.requestUpdatedGithubProfiles() }
-    }
-
     private fun paginationCall() {
         callApiThroughViewModel { viewModel.requestMoreGithubProfiles() }
     }
@@ -174,40 +169,28 @@ class MainActivity :
                             countingIdlingResource.decrement()
 
                         viewModel.shouldASearchBePerformed = false
-                        applyViewVisibility(githubProfileListSwipeRefreshLayout)
 
-                        shouldRecyclerViewAnimationBeExecuted =
                             if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
                                 gistAdapter.updateDataSource(this)
-                                true
+                                runLayoutAnimation(gistRecyclerView)
                             } else {
                                 gistAdapter.updateDataSource(this)
-                                profileInfoRecyclerView.adapter?.notifyDataSetChanged()
+                                gistRecyclerView.adapter?.notifyDataSetChanged()
                                 applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
-                                false
                             }
 
                         if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest =
                             false
 
                         if (viewModel.hasAnyUserRequestedUpdatedData) {
-                            applyViewVisibility(githubProfileListSwipeRefreshLayout)
                             gistAdapter.updateDataSource(this)
-                            shouldRecyclerViewAnimationBeExecuted = true
                             viewModel.hasAnyUserRequestedUpdatedData = false
                         }
-
-                        if (shouldRecyclerViewAnimationBeExecuted)
-                            runLayoutAnimation(profileInfoRecyclerView)
-                        else
-                            shouldRecyclerViewAnimationBeExecuted = true
                     }
                 }
 
                 is Int -> {
-
                     when (value) {
-
                         itemInserted ->
                             showSnackBar(this, "Gist saved") {}
 
@@ -227,9 +210,6 @@ class MainActivity :
                 countingIdlingResource.decrement()
 
             if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest = false
-
-            if (!shouldRecyclerViewAnimationBeExecuted)
-                shouldRecyclerViewAnimationBeExecuted = true
 
             viewModel.shouldASearchBePerformed = true
             showErrorMessages(error)
@@ -258,10 +238,11 @@ class MainActivity :
             // remove all previous list items so pagination call will not be affected by this
             scrollToTop(false)
             scheduleLayoutAnimation()
-            applyViewVisibility(githubProfileListSwipeRefreshLayout)
 
-            if (repositoryLoadingProgressBar.visibility == View.VISIBLE)
-                applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+            if (viewModel.hasFirstSuccessfulCallBeenMade) {
+                if (repositoryLoadingProgressBar.visibility == View.VISIBLE)
+                    applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+            }
         }
     }
 
@@ -281,10 +262,6 @@ class MainActivity :
 
     private fun showErrorMessages(message: Int) {
         applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
-        //SwipeRefreshLayout will only be visible if at least one successful call has been made so it will only be called if such condition is met
-        if (viewModel.hasFirstSuccessfulCallBeenMade) applyViewVisibility(
-            githubProfileListSwipeRefreshLayout
-        )
         showSnackBar(
             this,
             getString(message),
@@ -329,7 +306,7 @@ class MainActivity :
         with(customSnackBar) {
             if (isInternetConnectionAvailable) {
                 setText(getString(R.string.back_online_success_message)).setBackgroundColor(
-                    androidx.core.content.ContextCompat.getColor(
+                    ContextCompat.getColor(
                         applicationContext,
                         R.color.green_700
                     )
@@ -337,7 +314,7 @@ class MainActivity :
                 if (isShown) dismiss()
             } else {
                 setText(getString(R.string.no_connection_error)).setBackgroundColor(
-                    androidx.core.content.ContextCompat.getColor(
+                    ContextCompat.getColor(
                         applicationContext,
                         R.color.red_700
                     )
@@ -348,7 +325,7 @@ class MainActivity :
     }
 
     private fun setupRecyclerViewAddOnScrollListener() {
-        profileInfoRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        gistRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val total = recyclerView.layoutManager?.itemCount
                 val currentLastItem =
@@ -373,7 +350,6 @@ class MainActivity :
                     /* This attribute was created to avoid  making an API call twice or more because sometimes this callback is called more than once, so,
                     the API call method won't be called until the previous API call finishes combining it with the 'isThereAnOngoingCall' attribute located in the
                     MainViewModel */
-                    shouldRecyclerViewAnimationBeExecuted = false
                     if (!viewModel.isThereAnOngoingCall && !viewModel.isRetryListItemVisible) {
                         paginationCall()
                     }
@@ -384,9 +360,9 @@ class MainActivity :
 
     private fun scrollToTop(shouldScrollBeSmooth: Boolean) {
         if (shouldScrollBeSmooth)
-            profileInfoRecyclerView.smoothScrollToPosition(0)
+            gistRecyclerView.smoothScrollToPosition(0)
         else
-            profileInfoRecyclerView.scrollToPosition(0)
+            gistRecyclerView.scrollToPosition(0)
     }
 
     fun bindIdlingResource(receivedCountingIdlingResource: CountingIdlingResource) {

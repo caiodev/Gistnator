@@ -120,7 +120,7 @@ class MainViewModel(
 
                     if (shouldListItemsBeRemoved) {
                         setupList(this)
-                        if (hasLastCallBeenSuccessful()) hasFirstSuccessfulCallBeenMade = true
+                        if (!hasFirstSuccessfulCallBeenMade) hasFirstSuccessfulCallBeenMade = true
                     } else {
                         if (hasLastCallBeenSuccessful() && isPaginationLoadingListItemVisible) {
                             dropLast()
