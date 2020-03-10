@@ -2,7 +2,9 @@
     <string name="app_name" translatable="false">Gistnator</string>
 
     <!--User information-->
-    <string name="github_user_list_header">Gists</string>
+    <string name="favorites_button_message">Favorites</string>
+    <string name="gist_type">Contains %s files</string>
+    <string name="gist_list_header">Gists</string>
     <string name="retry_button_message">Retry</string>
     <string name="end_of_results">End of results</string>
 
@@ -16,7 +18,8 @@
     <string name="server_side_error">Our servers are overloaded at the moment. Please, try again later</string>
     <string name="api_query_limit_exceeded_error">The API query limit has been exceeded. Please, try again later</string>
     <string name="unknown_host_exception_and_socket_timeout_exception">Please, check your internet connection and try again later</string>
-    <string name="ssl_handshake_exception">The utils.utils.network you\'re connected to is unsafe. Please, change it and try again later</string>
+    <string name="ssl_handshake_exception">The network you\'re connected to is unsafe. Please, change it and try again later</string>
+    <string name="sqlite_constraint_exception">The chosen Gist is already saved</string>
     <string name="generic_exception_and_generic_error">An error occurred. Please, try again later</string>
 
 </resources>

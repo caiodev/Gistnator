@@ -1,7 +1,7 @@
 package br.com.caiodev.gistnator.sections.gistObtainment.model.repository
 
 import br.com.caiodev.gistnator.sections.gistObtainment.model.callInterface.UserProfile
-import utils.base.repository.RemoteRepository
+import utils.base.repository.remote.RemoteRepository
 
 class GistListRepository(
     private val remoteRepository: RemoteRepository,

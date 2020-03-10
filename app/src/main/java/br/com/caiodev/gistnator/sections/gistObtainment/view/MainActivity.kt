@@ -1,51 +1,57 @@
 package br.com.caiodev.gistnator.sections.gistObtainment.view
 
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.idling.CountingIdlingResource
 import br.com.caiodev.gistnator.R
+import br.com.caiodev.gistnator.sections.favoriteGists.view.FavoriteGistsActivity
 import br.com.caiodev.gistnator.sections.gistDetails.view.GistDetailsActivity
-import br.com.caiodev.gistnator.sections.gistObtainment.model.adapter.GistAdapter
+import br.com.caiodev.gistnator.sections.gistObtainment.view.adapter.GistAdapter
 import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModel
+import br.com.caiodev.gistnator.sections.gistObtainment.viewModel.MainViewModelFactory
 import kotlinx.android.synthetic.main.activity_main.*
-import org.koin.androidx.viewmodel.ext.android.viewModel
-import timber.log.Timber
-import utils.base.ActivityFlow
+import kotlinx.android.synthetic.main.activity_main.view.*
+import kotlinx.android.synthetic.main.heart_component.view.*
+import utils.base.flow.ViewFlow
 import utils.constants.Constants
 import utils.constants.Constants.favorite
 import utils.constants.Constants.gistCell
+import utils.constants.Constants.itemDeleted
+import utils.constants.Constants.itemInserted
 import utils.constants.Constants.retry
-import utils.extensions.applyViewVisibility
-import utils.extensions.showSnackBar
+import utils.extensions.*
 import utils.interfaces.OnItemClicked
+import utils.interfaces.viewTypes.ViewType
 import utils.network.NetworkChecking.checkIfInternetConnectionIsAvailable
 import utils.network.NetworkChecking.internetConnectionAvailabilityObservable
 import utils.snackBar.CustomSnackBar
 
 class MainActivity :
     AppCompatActivity(R.layout.activity_main),
-    ActivityFlow {
+    ViewFlow {
 
-    private var shouldRecyclerViewAnimationBeExecuted = true
     private var hasBackToTopButtonBeenClicked = false
     private lateinit var countingIdlingResource: CountingIdlingResource
 
     private lateinit var customSnackBar: CustomSnackBar
 
-    private val viewModel by viewModel<MainViewModel>()
+    private val viewModel: MainViewModel by lazy {
+        ViewModelProvider(this, MainViewModelFactory()).get(MainViewModel::class.java)
+    }
 
     private val gistAdapter by lazy {
         GistAdapter()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setTheme(R.style.AppTheme)
         super.onCreate(savedInstanceState)
         setupView()
         handleViewModel()
@@ -55,11 +61,12 @@ class MainActivity :
 
     private fun performCall() {
         if (!viewModel.hasFirstSuccessfulCallBeenMade)
-            applyViewVisibility(repositoryLoadingProgressBar, View.VISIBLE)
-        viewModel.requestUpdatedGithubProfiles()
+            callApiThroughViewModel { viewModel.requestUpdatedGithubGists() }
     }
 
     override fun setupView() {
+
+        setSupportActionBar(mainToolbar)
 
         //Condition when users rotate the screen and the activity gets destroyed
         if (viewModel.isThereAnOngoingCall) {
@@ -68,6 +75,12 @@ class MainActivity :
         }
 
         if (viewModel.lastVisibleListItem >= 10) applyViewVisibility(backToTopButton, View.VISIBLE)
+
+        changeDrawable(saveFavoriteComponent.favoriteImageView, R.drawable.ic_saved_favorite)
+
+        goToFavoritesActivityLinearLayout.setOnClickListener {
+            startActivity(Intent(applicationContext, FavoriteGistsActivity::class.java))
+        }
 
         customSnackBar = CustomSnackBar.make(this.findViewById(android.R.id.content))
 
@@ -80,13 +93,7 @@ class MainActivity :
             scrollToTop(true)
         }
 
-        githubProfileListSwipeRefreshLayout.setOnRefreshListener {
-            viewModel.hasAnyUserRequestedUpdatedData = true
-            viewModel.hasUserTriggeredANewRequest = true
-            swipeRefreshCall()
-        }
-
-        profileInfoRecyclerView.apply {
+        gistRecyclerView.apply {
             setHasFixedSize(true)
             adapter = gistAdapter
             setupRecyclerViewAddOnScrollListener()
@@ -94,7 +101,12 @@ class MainActivity :
 
         gistAdapter.setOnItemClicked(object : OnItemClicked {
 
-            override fun onItemClick(adapterPosition: Int, id: Int) {
+            override fun onItemClick(
+                adapterPosition: Int,
+                id: Int,
+                shouldBeDeleted: Boolean,
+                itemImage: Bitmap?
+            ) {
 
                 when (id) {
                     gistCell -> {
@@ -104,21 +116,30 @@ class MainActivity :
                                     Intent(
                                         applicationContext,
                                         GistDetailsActivity::class.java
-                                    )
-                                        .putExtra(
-                                            Constants.gistUrl,
-                                            viewModel.provideGistUrl(
-                                                adapterPosition
-                                            )
+                                    ).putExtra(
+                                        Constants.gistId,
+                                        viewModel.provideGistId(
+                                            adapterPosition
                                         )
+                                    )
                                 )
                             },
-                            onConnectionUnavailable = { showInternetConnectionStatusSnackBar(false) })
+                            onConnectionUnavailable = {
+                                showInternetConnectionStatusSnackBar(
+                                    applicationContext,
+                                    customSnackBar,
+                                    false
+                                )
+                            })
                     }
 
                     favorite -> {
-                        viewModel.saveFavoriteGist(adapterPosition)
-                        Timber.d("StarActivated!")
+                        if (shouldBeDeleted)
+                            viewModel.deleteGist(adapterPosition)
+                        else
+                            itemImage?.let {
+                                viewModel.saveGist(adapterPosition, it)
+                            }
                     }
 
                     retry -> paginationCall()
@@ -127,12 +148,8 @@ class MainActivity :
         })
     }
 
-    private fun swipeRefreshCall() {
-        callApiThroughViewModel { viewModel.requestUpdatedGithubProfiles() }
-    }
-
     private fun paginationCall() {
-        viewModel.requestMoreGithubProfiles()
+        callApiThroughViewModel { viewModel.requestMoreGithubGists() }
     }
 
     override fun handleViewModel() {
@@ -142,38 +159,48 @@ class MainActivity :
 
     private fun onSuccess() {
 
-        viewModel.mainListLiveData.observe(this) { githubUsersList ->
+        viewModel.liveData.observe(this) { value ->
 
-            if (this::countingIdlingResource.isInitialized)
-                countingIdlingResource.decrement()
+            when (value) {
 
-            viewModel.shouldASearchBePerformed = false
-            applyViewVisibility(githubProfileListSwipeRefreshLayout)
+                is List<*> -> {
 
-            shouldRecyclerViewAnimationBeExecuted =
-                if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
-                    gistAdapter.updateDataSource(githubUsersList)
-                    true
-                } else {
-                    gistAdapter.updateDataSource(githubUsersList)
-                    profileInfoRecyclerView.adapter?.notifyDataSetChanged()
-                    applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
-                    false
+                    with(viewModel.castAttributeThroughViewModel<List<ViewType>>(value)) {
+
+                        if (this@MainActivity::countingIdlingResource.isInitialized)
+                            countingIdlingResource.decrement()
+
+                        viewModel.shouldASearchBePerformed = false
+
+                        if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
+                            gistAdapter.updateDataSource(this)
+                            runLayoutAnimation(gistRecyclerView)
+                        } else {
+                            gistAdapter.updateDataSource(this)
+                            gistRecyclerView.adapter?.notifyDataSetChanged()
+                            applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+                        }
+
+                        if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest =
+                            false
+
+                        if (viewModel.hasAnyUserRequestedUpdatedData) {
+                            gistAdapter.updateDataSource(this)
+                            viewModel.hasAnyUserRequestedUpdatedData = false
+                        }
+                    }
                 }
 
-            if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest = false
+                is Int -> {
+                    when (value) {
+                        itemInserted ->
+                            showSnackBar(this, "Gist saved") {}
 
-            if (viewModel.hasAnyUserRequestedUpdatedData) {
-                applyViewVisibility(githubProfileListSwipeRefreshLayout)
-                gistAdapter.updateDataSource(githubUsersList)
-                shouldRecyclerViewAnimationBeExecuted = true
-                viewModel.hasAnyUserRequestedUpdatedData = false
+                        itemDeleted ->
+                            showSnackBar(this, "Gist deleted") {}
+                    }
+                }
             }
-
-            if (shouldRecyclerViewAnimationBeExecuted)
-                runLayoutAnimation(profileInfoRecyclerView)
-            else
-                shouldRecyclerViewAnimationBeExecuted = true
         }
     }
 
@@ -186,9 +213,6 @@ class MainActivity :
 
             if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest = false
 
-            if (!shouldRecyclerViewAnimationBeExecuted)
-                shouldRecyclerViewAnimationBeExecuted = true
-
             viewModel.shouldASearchBePerformed = true
             showErrorMessages(error)
         }
@@ -197,7 +221,13 @@ class MainActivity :
     override fun setupExtras() {
         checkIfInternetConnectionIsAvailableCaller(
             onConnectionAvailable = {},
-            onConnectionUnavailable = { showInternetConnectionStatusSnackBar(false) })
+            onConnectionUnavailable = {
+                showInternetConnectionStatusSnackBar(
+                    applicationContext,
+                    customSnackBar,
+                    false
+                )
+            })
         setupInternetConnectionObserver()
     }
 
@@ -216,10 +246,11 @@ class MainActivity :
             // remove all previous list items so pagination call will not be affected by this
             scrollToTop(false)
             scheduleLayoutAnimation()
-            applyViewVisibility(githubProfileListSwipeRefreshLayout)
 
-            if (repositoryLoadingProgressBar.visibility == View.VISIBLE)
-                applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+            if (viewModel.hasFirstSuccessfulCallBeenMade) {
+                if (repositoryLoadingProgressBar.visibility == View.VISIBLE)
+                    applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+            }
         }
     }
 
@@ -228,6 +259,7 @@ class MainActivity :
             onConnectionAvailable = {
                 viewModel.shouldASearchBePerformed = false
                 genericFunction.invoke()
+                applyViewVisibility(repositoryLoadingProgressBar, View.VISIBLE)
                 if (this::countingIdlingResource.isInitialized)
                     countingIdlingResource.increment()
             },
@@ -238,17 +270,19 @@ class MainActivity :
 
     private fun showErrorMessages(message: Int) {
         applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
-        //SwipeRefreshLayout will only be visible if at least one successful call has been made so it will only be called if such condition is met
-        if (viewModel.hasFirstSuccessfulCallBeenMade) applyViewVisibility(
-            githubProfileListSwipeRefreshLayout
-        )
         showSnackBar(
             this,
             getString(message),
             onDismissed = {
                 checkIfInternetConnectionIsAvailableCaller(
                     {},
-                    { showInternetConnectionStatusSnackBar(false) })
+                    {
+                        showInternetConnectionStatusSnackBar(
+                            applicationContext,
+                            customSnackBar,
+                            false
+                        )
+                    })
             })
     }
 
@@ -268,44 +302,30 @@ class MainActivity :
             .observe(this) { isInternetAvailable ->
                 when (isInternetAvailable) {
                     true -> {
-                        showInternetConnectionStatusSnackBar(true)
+                        showInternetConnectionStatusSnackBar(
+                            applicationContext,
+                            customSnackBar,
+                            true
+                        )
                         if (viewModel.hasFirstSuccessfulCallBeenMade) {
                             if (!viewModel.isThereAnOngoingCall && viewModel.isRetryListItemVisible && !viewModel.hasForbiddenErrorBeenEmitted) {
                                 paginationCall()
                             }
                         } else
                             if (!viewModel.isThereAnOngoingCall)
-                                viewModel.requestUpdatedGithubProfiles()
+                                callApiThroughViewModel { viewModel.requestUpdatedGithubGists() }
                     }
-                    false -> showInternetConnectionStatusSnackBar(false)
+                    else -> showInternetConnectionStatusSnackBar(
+                        applicationContext,
+                        customSnackBar,
+                        false
+                    )
                 }
             }
     }
 
-    private fun showInternetConnectionStatusSnackBar(isInternetConnectionAvailable: Boolean) {
-        with(customSnackBar) {
-            if (isInternetConnectionAvailable) {
-                setText(getString(R.string.back_online_success_message)).setBackgroundColor(
-                    androidx.core.content.ContextCompat.getColor(
-                        applicationContext,
-                        R.color.green_700
-                    )
-                )
-                if (isShown) dismiss()
-            } else {
-                setText(getString(R.string.no_connection_error)).setBackgroundColor(
-                    androidx.core.content.ContextCompat.getColor(
-                        applicationContext,
-                        R.color.red_700
-                    )
-                )
-                show()
-            }
-        }
-    }
-
     private fun setupRecyclerViewAddOnScrollListener() {
-        profileInfoRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+        gistRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val total = recyclerView.layoutManager?.itemCount
                 val currentLastItem =
@@ -330,7 +350,6 @@ class MainActivity :
                     /* This attribute was created to avoid  making an API call twice or more because sometimes this callback is called more than once, so,
                     the API call method won't be called until the previous API call finishes combining it with the 'isThereAnOngoingCall' attribute located in the
                     MainViewModel */
-                    shouldRecyclerViewAnimationBeExecuted = false
                     if (!viewModel.isThereAnOngoingCall && !viewModel.isRetryListItemVisible) {
                         paginationCall()
                     }
@@ -341,9 +360,9 @@ class MainActivity :
 
     private fun scrollToTop(shouldScrollBeSmooth: Boolean) {
         if (shouldScrollBeSmooth)
-            profileInfoRecyclerView.smoothScrollToPosition(0)
+            gistRecyclerView.smoothScrollToPosition(0)
         else
-            profileInfoRecyclerView.scrollToPosition(0)
+            gistRecyclerView.scrollToPosition(0)
     }
 
     fun bindIdlingResource(receivedCountingIdlingResource: CountingIdlingResource) {

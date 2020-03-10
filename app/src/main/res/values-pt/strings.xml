@@ -2,7 +2,7 @@
 <resources>
     <string name="empty_field_error">Campo vazio</string>
     <string name="no_connection_error">Não há conexão com a internet</string>
-    <string name="github_user_list_header">Perfis</string>
+    <string name="gist_list_header">Perfis</string>
     <string name="server_side_error">Nossos servidores estão sobrecarregados no momento. Por favor, tente novamente mais tarde</string>
     <string name="ssl_handshake_exception">A rede na qual você está, não é segura. Por favor, mude de rede e tente novamente mais tarde</string>
     <string name="client_side_error">Não conseguimos obter o que você está procurando. Por favor, tente novamente mais tarde</string>
@@ -12,4 +12,7 @@
     <string name="back_online_success_message">Conexão reestabelecida</string>
     <string name="retry_button_message">Tentar novamente</string>
     <string name="end_of_results">Fim dos resultados</string>
+    <string name="gist_type">Contém %s arquivos</string>
+    <string name="sqlite_constraint_exception">O Gist escolhido já foi salvo</string>
+    <string name="favorites_button_message">Favoritos</string>
 </resources>

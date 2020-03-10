@@ -1,4 +1,4 @@
-package utils.base.repository
+package utils.base.repository.remote
 
 import retrofit2.Response
 import timber.log.Timber

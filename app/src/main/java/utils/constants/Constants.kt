@@ -2,7 +2,7 @@ package utils.constants
 
 object Constants {
 
-    const val gistUrl = "gistUrl"
+    const val gistId = "gistId"
 
     //RecyclerView view types
     const val header = 0
@@ -20,11 +20,15 @@ object Constants {
 
     //Error
     //Exceptions
+    //Remote
     const val connectException = 2
     const val genericException = 3
     const val socketTimeoutException = 4
     const val sslHandshakeException = 5
     const val unknownHostException = 6
+
+    //Local
+    const val sqliteConstraintException = 7
 
     //HTTP codes
     const val clientSideError = 7
@@ -36,4 +40,9 @@ object Constants {
 
     //Pagination
     const val numberOfItemsPerPage = 20
+
+    //Database
+    const val databaseName = "gist_database"
+    const val itemDeleted = 0
+    const val itemInserted = 1
 }

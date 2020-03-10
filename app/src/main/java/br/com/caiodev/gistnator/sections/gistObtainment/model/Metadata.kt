@@ -2,7 +2,7 @@ package br.com.caiodev.gistnator.sections.gistObtainment.model
 
 import com.google.gson.annotations.SerializedName
 
-data class MetaData(
+data class Metadata(
     @SerializedName("filename") val fileName: String = "",
     @SerializedName("type") val type: String? = "",
     @SerializedName("language") val language: String? = "",
