@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,10 +27,7 @@ import utils.constants.Constants.gistCell
 import utils.constants.Constants.itemDeleted
 import utils.constants.Constants.itemInserted
 import utils.constants.Constants.retry
-import utils.extensions.applyViewVisibility
-import utils.extensions.castAttributeThroughViewModel
-import utils.extensions.changeDrawable
-import utils.extensions.showSnackBar
+import utils.extensions.*
 import utils.interfaces.OnItemClicked
 import utils.interfaces.viewTypes.ViewType
 import utils.network.NetworkChecking.checkIfInternetConnectionIsAvailable
@@ -65,7 +61,7 @@ class MainActivity :
 
     private fun performCall() {
         if (!viewModel.hasFirstSuccessfulCallBeenMade)
-            callApiThroughViewModel { viewModel.requestUpdatedGithubProfiles() }
+            callApiThroughViewModel { viewModel.requestUpdatedGithubGists() }
     }
 
     override fun setupView() {
@@ -128,7 +124,13 @@ class MainActivity :
                                     )
                                 )
                             },
-                            onConnectionUnavailable = { showInternetConnectionStatusSnackBar(false) })
+                            onConnectionUnavailable = {
+                                showInternetConnectionStatusSnackBar(
+                                    applicationContext,
+                                    customSnackBar,
+                                    false
+                                )
+                            })
                     }
 
                     favorite -> {
@@ -147,7 +149,7 @@ class MainActivity :
     }
 
     private fun paginationCall() {
-        callApiThroughViewModel { viewModel.requestMoreGithubProfiles() }
+        callApiThroughViewModel { viewModel.requestMoreGithubGists() }
     }
 
     override fun handleViewModel() {
@@ -170,14 +172,14 @@ class MainActivity :
 
                         viewModel.shouldASearchBePerformed = false
 
-                            if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
-                                gistAdapter.updateDataSource(this)
-                                runLayoutAnimation(gistRecyclerView)
-                            } else {
-                                gistAdapter.updateDataSource(this)
-                                gistRecyclerView.adapter?.notifyDataSetChanged()
-                                applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
-                            }
+                        if (!viewModel.hasFirstSuccessfulCallBeenMade || viewModel.hasUserTriggeredANewRequest) {
+                            gistAdapter.updateDataSource(this)
+                            runLayoutAnimation(gistRecyclerView)
+                        } else {
+                            gistAdapter.updateDataSource(this)
+                            gistRecyclerView.adapter?.notifyDataSetChanged()
+                            applyViewVisibility(repositoryLoadingProgressBar, View.GONE)
+                        }
 
                         if (viewModel.hasUserTriggeredANewRequest) viewModel.hasUserTriggeredANewRequest =
                             false
@@ -219,7 +221,13 @@ class MainActivity :
     override fun setupExtras() {
         checkIfInternetConnectionIsAvailableCaller(
             onConnectionAvailable = {},
-            onConnectionUnavailable = { showInternetConnectionStatusSnackBar(false) })
+            onConnectionUnavailable = {
+                showInternetConnectionStatusSnackBar(
+                    applicationContext,
+                    customSnackBar,
+                    false
+                )
+            })
         setupInternetConnectionObserver()
     }
 
@@ -268,7 +276,13 @@ class MainActivity :
             onDismissed = {
                 checkIfInternetConnectionIsAvailableCaller(
                     {},
-                    { showInternetConnectionStatusSnackBar(false) })
+                    {
+                        showInternetConnectionStatusSnackBar(
+                            applicationContext,
+                            customSnackBar,
+                            false
+                        )
+                    })
             })
     }
 
@@ -288,40 +302,26 @@ class MainActivity :
             .observe(this) { isInternetAvailable ->
                 when (isInternetAvailable) {
                     true -> {
-                        showInternetConnectionStatusSnackBar(true)
+                        showInternetConnectionStatusSnackBar(
+                            applicationContext,
+                            customSnackBar,
+                            true
+                        )
                         if (viewModel.hasFirstSuccessfulCallBeenMade) {
                             if (!viewModel.isThereAnOngoingCall && viewModel.isRetryListItemVisible && !viewModel.hasForbiddenErrorBeenEmitted) {
                                 paginationCall()
                             }
                         } else
                             if (!viewModel.isThereAnOngoingCall)
-                                callApiThroughViewModel { viewModel.requestUpdatedGithubProfiles() }
+                                callApiThroughViewModel { viewModel.requestUpdatedGithubGists() }
                     }
-                    false -> showInternetConnectionStatusSnackBar(false)
+                    else -> showInternetConnectionStatusSnackBar(
+                        applicationContext,
+                        customSnackBar,
+                        false
+                    )
                 }
             }
-    }
-
-    private fun showInternetConnectionStatusSnackBar(isInternetConnectionAvailable: Boolean) {
-        with(customSnackBar) {
-            if (isInternetConnectionAvailable) {
-                setText(getString(R.string.back_online_success_message)).setBackgroundColor(
-                    ContextCompat.getColor(
-                        applicationContext,
-                        R.color.green_700
-                    )
-                )
-                if (isShown) dismiss()
-            } else {
-                setText(getString(R.string.no_connection_error)).setBackgroundColor(
-                    ContextCompat.getColor(
-                        applicationContext,
-                        R.color.red_700
-                    )
-                )
-                show()
-            }
-        }
     }
 
     private fun setupRecyclerViewAddOnScrollListener() {

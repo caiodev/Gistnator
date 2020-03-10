@@ -73,18 +73,18 @@ class MainViewModel(
     private var isPaginationLoadingListItemVisible = false
     internal var isRetryListItemVisible = false
 
-    internal fun requestUpdatedGithubProfiles() {
+    internal fun requestUpdatedGithubGists() {
         hasAnyUserRequestedUpdatedData = true
         pageNumber = 1
-        requestGithubProfiles(true)
+        requestGithubGists(true)
     }
 
-    internal fun requestMoreGithubProfiles() {
-        requestGithubProfiles(false)
+    internal fun requestMoreGithubGists() {
+        requestGithubGists(false)
     }
 
     //This method is where all the utils.utils.network request process starts. First, when it is called,
-    private fun requestGithubProfiles(
+    private fun requestGithubGists(
         shouldListItemsBeRemoved: Boolean
     ) {
 

@@ -7,13 +7,13 @@ import android.widget.EditText
 import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import br.com.caiodev.gistnator.R
 import com.google.android.material.snackbar.Snackbar
+import utils.snackBar.CustomSnackBar
 
 @Suppress("unused")
-fun Context.applyViewVisibility(view: View, visibility: Int? = null) {
-    visibility?.let {
-        view.visibility = it
-    }
+fun Context.applyViewVisibility(view: View, visibility: Int) {
+    view.visibility = visibility
 }
 
 fun Context.changeDrawable(target: ImageView, newDrawable: Int) {
@@ -39,6 +39,28 @@ inline fun Context.showSnackBar(
             onDismissed.invoke()
         }
     }).show()
+}
+
+fun showInternetConnectionStatusSnackBar(applicationContext: Context, customSnackBar: CustomSnackBar, isInternetConnectionAvailable: Boolean) {
+    with(customSnackBar) {
+        if (isInternetConnectionAvailable) {
+            setText(applicationContext.getString(R.string.back_online_success_message)).setBackgroundColor(
+                ContextCompat.getColor(
+                    applicationContext,
+                    R.color.green_700
+                )
+            )
+            if (isShown) dismiss()
+        } else {
+            setText(applicationContext.getString(R.string.no_connection_error)).setBackgroundColor(
+                ContextCompat.getColor(
+                    applicationContext,
+                    R.color.red_700
+                )
+            )
+            show()
+        }
+    }
 }
 
 fun Context.hideKeyboard(editText: EditText) {

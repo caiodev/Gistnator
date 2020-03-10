@@ -25,7 +25,7 @@
             <ImageView
                 android:id="@+id/userAvatarImageView"
                 android:layout_width="@dimen/user_avatar_size"
-                android:layout_height="@dimen/view_102dp"
+                android:layout_height="@dimen/user_avatar_size"
                 android:scaleType="fitXY"
                 android:src="@drawable/ic_octocat"
                 app:layout_constraintBottom_toBottomOf="parent"

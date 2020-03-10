@@ -6,6 +6,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.RecyclerView
 import br.com.caiodev.gistnator.R
 import br.com.caiodev.gistnator.sections.gistObtainment.model.viewTypes.Gist
+import coil.transform.CircleCropTransformation
 import kotlinx.android.synthetic.main.gist_view_holder_layout.view.*
 import kotlinx.android.synthetic.main.heart_component.view.*
 import utils.constants.Constants.favorite
